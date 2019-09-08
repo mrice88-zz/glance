@@ -6,7 +6,8 @@ import functools
 
 @attr.s
 class Look:
-    start_time = attr.ib(type=float)
+    target = attr.ib()
+    start_time = attr.ib(type=float, default=time.time())
     end_time = attr.ib(type=float, default=None)
 
     def __attrs_post_init(self):
@@ -28,33 +29,28 @@ class Look:
 @attr.s
 class Watch:
     target = attr.ib(type=str)
-    start_time = attr.ib()
-    end_time = attr.ib()
-    looks = attr.ib(type=[Look], default=[])
+    start_time = attr.ib(type=float, default=time.time())
+    end_time = attr.ib(type=float, default=None)
+    looks = attr.ib(type=[], default=[])
 
-    def __attrs_post_init(self):
-        self.start_time = time.time()
+    def start_look(self):
+        self.looks.append(Look(self.target))
 
-    @property
-    def last_look(self) -> Look:
-        return self.looks[-1]
+    def last_look(self) -> (Look, None):
+        if self.looks:
+            return self.looks[-1]
+        else:
+            return None
 
     def stop(self):
-        for look in self.looks:
-            look.stop()
         self.end_time = time.time()
 
 
 @attr.s
 class Glance:
-    start_time = attr.ib()
-    end_time = attr.ib()
+    start_time = attr.ib(type=float, default=time.time())
+    end_time = attr.ib(type=float, default=None)
     watches = attr.ib(type={}, default={})
-    current_start = attr.ib(default=None)
-    current_end = attr.ib(default=None)
-
-    def __attrs_post_init(self):
-        self.start_time = time.time()
 
     def end(self):
         for watch in self.watches.values():
@@ -63,19 +59,17 @@ class Glance:
         self.end_time = time.time()
 
     def watch(self, func):
-        @functools.wraps(func)
         def wrapper(*args, **kwawrgs):
             if func.__name__ not in self.watches.items():
                 self.watches[func.__name__] = Watch(target=func.__name__)
 
-            watch = self.watches[func.__name__]
+            self.watches[func.__name__].start_look()
 
             func_output = func(*args, **kwawrgs)
 
-            watch.last_look.stop()
+            self.watches[func.__name__].last_look().stop()
 
             return func_output
-
         return wrapper
 
 

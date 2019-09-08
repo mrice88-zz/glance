@@ -1,4 +1,4 @@
 
-from .glance import Glance
+from .glance import Glance, Watch, Look
 
 
