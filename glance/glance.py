@@ -8,9 +8,13 @@ import uuid
 @attr.s
 class Look:
     target = attr.ib()
-    start_time = attr.ib(type=float, default=time.time())
-    id = attr.ib(type=str, default=str(uuid.uuid4()))
+    start_time = attr.ib(type=float, default=None)
+    id = attr.ib(type=str, default=None)
     end_time = attr.ib(type=float, default=None)
+
+    def __attrs_post_init__(self):
+        self.start_time = time.time()
+        self.id = str(uuid.uuid4().int)
 
     @variants.primary
     def look_time(self):
