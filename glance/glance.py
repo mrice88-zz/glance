@@ -31,9 +31,9 @@ class Look:
 @attr.s
 class Watch:
     target = attr.ib(type=str)
-    start_time = attr.ib(type=float, default= time.time())
+    start_time = attr.ib(type=float, default=time.time())
     end_time = attr.ib(type=float, default=None)
-    looks = attr.ib(type={}, default={})
+    looks = attr.ib(type={}, factory=dict)
 
     # def __attrs_post_init__(self):
     #     self.start_time = time.time()
@@ -55,7 +55,7 @@ class Watch:
 class Glance:
     start_time = attr.ib(type=float, default=time.time())
     end_time = attr.ib(type=float, default=None)
-    watches = attr.ib(type={}, default={})
+    watches = attr.ib(type={}, factory=dict)
 
     def end(self):
         for watch in self.watches.values():
