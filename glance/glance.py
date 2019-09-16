@@ -2,7 +2,6 @@ import time
 import attr
 import variants
 import uuid
-# import functools
 
 
 @attr.s
@@ -32,20 +31,17 @@ class Look:
 @attr.s
 class Watch:
     target = attr.ib(type=str)
-    start_time = attr.ib(type=float, default=time.time())
+    start_time = attr.ib(type=float, default= time.time())
     end_time = attr.ib(type=float, default=None)
     looks = attr.ib(type={}, default={})
+
+    # def __attrs_post_init__(self):
+    #     self.start_time = time.time()
 
     def start_look(self):
         look = Look(self.target)
         self.looks[look.id] = look
         return look.id
-
-    # def last_look(self) -> (Look, None):
-    #     if self.looks:
-    #         return self.looks[-1]
-    #     else:
-    #         return None
 
     def stop_look(self, look_id):
         look = self.looks[look_id]
@@ -69,7 +65,7 @@ class Glance:
 
     def watch(self, func):
         def wrapper(*args, **kwawrgs):
-            if func.__name__ not in self.watches.items():
+            if func.__name__ not in self.watches.keys():
                 self.watches[func.__name__] = Watch(target=func.__name__)
 
             look = self.watches[func.__name__].start_look()

@@ -1,7 +1,7 @@
 
 __title__ = 'glance'
 __description__ = ''
-__url__ = 'https://github.com/jamesabel/balsa'
+__url__ = 'https://github.com/mrice88/glanceman'
 __download_url__ = 'https://github.com/jamesabel/balsa/archive/master.zip'
 __version__ = '0.1.2'
 __author__ = 'James Abel'
