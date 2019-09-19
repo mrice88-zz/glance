@@ -1,5 +1,8 @@
 attrs
-matplotlib
-maya
-balsa
 variants
+
+# for testing
+pytest
+
+# wheel
+wheel
