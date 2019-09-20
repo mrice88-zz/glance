@@ -3,6 +3,7 @@ import attr
 import variants
 import uuid
 import functools
+import statistics
 import dateutil.relativedelta
 from datetime import datetime
 
@@ -85,7 +86,79 @@ class Watch:
         look.stop()
 
     def stop(self):
+        for look in self.looks.values():
+            look.stop()
         self.end_time = time.time()
+
+    @variants.primary
+    def longest_look(self):  # TODO refactor to use max()?
+        longest = None
+        for look in self.looks.values():
+            if longest:
+                if longest < look.look_time():
+                    longest = look.look_time()
+            else:
+                longest = look.look_time()
+        return longest
+
+    @longest_look.variant("key")
+    def longest_look(self):  # TODO refactor to use max()?
+        longest = None
+        for key, look in self.looks.items():
+            if longest:
+                if longest[1] < look.look_time():
+                    longest = (key, look.look_time())
+            else:
+                longest = (key, look.look_time())
+        return longest[0]
+
+    @longest_look.variant("tuple")
+    def longest_look(self):  # TODO refactor to use max()?
+        longest = None
+        for key, look in self.looks.items():
+            if longest:
+                if longest[1] < look.look_time():
+                    longest = (key, look.look_time())
+            else:
+                longest = (key, look.look_time())
+        return longest
+
+    @variants.primary
+    def shortest_look(self):  # TODO refactor to use max()?
+        shortest = None
+        for look in self.looks.values():
+            if shortest:
+                if shortest > look.look_time():
+                    shortest = look.look_time()
+            else:
+                shortest = look.look_time()
+        return shortest
+
+    @shortest_look.variant("key")
+    def shortest_look(self):  # TODO refactor to use max()?
+        shortest = None
+        for key, look in self.looks.items():
+            if shortest:
+                if shortest[1] > look.look_time():
+                    shortest = (key, look.look_time())
+            else:
+                shortest = (key, look.look_time())
+        return shortest[0]
+
+    @shortest_look.variant("tuple")
+    def shortest_look(self):  # TODO refactor to use max()?
+        shortest = None
+        for key, look in self.looks.items():
+            if shortest:
+                if shortest[1] > look.look_time():
+                    shortest = (key, look.look_time())
+            else:
+                shortest = (key, look.look_time())
+        return shortest
+
+    def mean(self):
+        times = [look.look_time() for look in self.looks.values()]
+        return statistics.mean(times)
 
 
 @attr.s
@@ -99,6 +172,13 @@ class Glance:
             watch.stop()
 
         self.end_time = time.time()
+
+    def start_watch(self, target_name: str):
+        self.watches[target_name] = Watch(target=target_name)
+
+    def stop_watch(self, target_name: str):
+        watch = self.watches[target_name]
+        watch.stop()
 
     def watch(self, func):
         @functools.wraps(func)

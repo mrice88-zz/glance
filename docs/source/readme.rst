@@ -13,7 +13,7 @@ Installation
 
 .. code-block:: console
 
-    pip install glance_times
+    pip install glance-times
 
 Simple Example
 ==============
