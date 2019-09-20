@@ -124,7 +124,7 @@ class Watch:
         return longest
 
     @variants.primary
-    def shortest_look(self):  # TODO refactor to use max()?
+    def shortest_look(self):  # TODO refactor to use min()?
         shortest = None
         for look in self.looks.values():
             if shortest:
@@ -135,7 +135,7 @@ class Watch:
         return shortest
 
     @shortest_look.variant("key")
-    def shortest_look(self):  # TODO refactor to use max()?
+    def shortest_look(self):  # TODO refactor to use min()?
         shortest = None
         for key, look in self.looks.items():
             if shortest:
@@ -146,7 +146,7 @@ class Watch:
         return shortest[0]
 
     @shortest_look.variant("tuple")
-    def shortest_look(self):  # TODO refactor to use max()?
+    def shortest_look(self):  # TODO refactor to use min()?
         shortest = None
         for key, look in self.looks.items():
             if shortest:
