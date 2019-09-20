@@ -68,7 +68,7 @@ class Look:
 @attr.s
 class Watch:
     target = attr.ib(type=str)
-    start_time = attr.ib(type=float)
+    start_time = attr.ib(type=float, default=None)
     end_time = attr.ib(type=float, default=None)
     looks = attr.ib(type=dict, factory=dict)
 
