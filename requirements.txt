@@ -1,8 +1,8 @@
 attrs
 variants
-
+python-dateutil
 # for testing
 pytest
-
 # wheel
 wheel
+

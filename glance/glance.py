@@ -4,16 +4,20 @@ import variants
 import uuid
 import functools
 import statistics
+import inspect
 import dateutil.relativedelta
 from datetime import datetime
+from glance.errors import GlanceLookOpenError
 
 
 @attr.s
 class Look:
     target = attr.ib(type=str)
+    expected_args = attr.ib(type=inspect.Signature)
     id = attr.ib(type=str, default=None)
     start_time = attr.ib(type=float, default=None)
     end_time = attr.ib(type=float, default=None)
+    given_args = attr.ib(type=dict, factory=dict)
 
     @property
     def is_done(self):
@@ -31,7 +35,7 @@ class Look:
         if self.is_done:
             return self.end_time - self.start_time
         else:
-            raise ValueError("Look has not been ended, no value for end_time")
+            raise GlanceLookOpenError()
 
     @look_time.variant("datetime")
     def look_time(self):
@@ -41,7 +45,7 @@ class Look:
             time_delta = dateutil.relativedelta.relativedelta(dt_end, dt_start)
             return time_delta
         else:
-            raise ValueError("Look has not been ended, no value for end_time")
+            raise GlanceLookOpenError()
 
     @look_time.variant("humanized")
     def look_time(self):
@@ -63,12 +67,16 @@ class Look:
             raise ValueError("Look has not been ended, no value for end_time")
 
     def stop(self):
-        self.end_time = time.time()
+        if self.end_time:
+            pass
+        else:
+            self.end_time = time.time()
 
 
 @attr.s
 class Watch:
     target = attr.ib(type=str)
+    expected_args = attr.ib(type=inspect.Signature, default=None)
     start_time = attr.ib(type=float, default=None)
     end_time = attr.ib(type=float, default=None)
     looks = attr.ib(type=dict, factory=dict)
@@ -77,7 +85,7 @@ class Watch:
         self.start_time = time.time()
 
     def start_look(self):
-        look = Look(self.target)
+        look = Look(self.target, self.expected_args)
         self.looks[look.id] = look
         return look.id
 
@@ -156,9 +164,31 @@ class Watch:
                 shortest = (key, look.look_time())
         return shortest
 
+    @property
     def mean(self):
         times = [look.look_time() for look in self.looks.values()]
         return statistics.mean(times)
+
+    @property
+    def std(self):
+        times = [look.look_time() for look in self.looks.values()]
+        return statistics.stdev(times)
+
+    @variants.primary
+    def find_outliers(self):
+        outliers = list()
+        for look in self.looks.values():
+            if look.look_time() > 2 * self.std:
+                outliers.append((look.id, look.look_time()))
+        return outliers
+
+    @find_outliers.variant("weak")
+    def find_outliers(self):
+        outliers = list()
+        for look in self.looks.values():
+            if look.look_time() > 2 * self.std:
+                outliers.append((look.id, look.look_time()))
+        return outliers
 
 
 @attr.s
@@ -187,11 +217,16 @@ class Glance:
                 self.watches[func.__name__] = Watch(target=func.__name__)
 
             look = self.watches[func.__name__].start_look()
-
+            watch = self.watches[func.__name__]
+            watch.expected_args = inspect.signature(func)
             func_output = func(*args, **kwargs)
 
-            watch = self.watches[func.__name__]
             watch.stop_look(look)
+            current_look = watch.looks[look]
+            current_look.given_args = {
+                "args": args,
+                "kwargs": kwargs,
+            }
 
             return func_output
         return wrapper
