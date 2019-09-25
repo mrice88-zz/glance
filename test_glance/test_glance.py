@@ -4,7 +4,7 @@ import dateutil.relativedelta
 from datetime import datetime
 
 # setup
-look = Look("test")
+look = Look("test", None)
 time.sleep(1)
 look.stop()
 
@@ -24,7 +24,7 @@ def test_look_is_done():
     :return:
     """
     from glance import Look
-    look1 = Look('test')
+    look1 = Look('test', None)
     assert look1.is_done is False
 
     look1.stop()
@@ -83,6 +83,14 @@ def test_watch_shortest_look_key():
 
 def test_watch_shortest_look_tuple():
     assert watch.shortest_look.tuple() == (look.id, look.look_time())
+
+
+def test_watch_mean():
+    assert int(watch.mean) == 2  # TODO push this out to two decimal places, not int
+
+
+def test_watch_std():
+    assert int(watch.std) == 1  # TODO push this to two decimal places
 
 
 def test_watch_stop():
