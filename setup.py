@@ -21,6 +21,6 @@ setup(
     keywords=['logging', 'utility'],
     packages=['glance'],
     package_data={__title__: [readme_file_path]},
-    install_requires=['variants', 'attrs'],
+    install_requires=['variants', 'attrs', 'python-dateutil'],
     classifiers=[]
 )

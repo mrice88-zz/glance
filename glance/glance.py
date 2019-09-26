@@ -85,7 +85,7 @@ class Watch:
         self.start_time = time.time()
 
     def start_look(self):
-        look = Look(self.target, self.expected_args)
+        look = Look(self.target, expected_args=self.expected_args)
         self.looks[look.id] = look
         return look.id
 
@@ -182,12 +182,28 @@ class Watch:
                 outliers.append((look.id, look.look_time()))
         return outliers
 
-    @find_outliers.variant("weak")
+    @find_outliers.variant("looks")
     def find_outliers(self):
         outliers = list()
         for look in self.looks.values():
             if look.look_time() > 2 * self.std:
+                outliers.append(look)
+        return outliers
+
+    @variants.primary
+    def find_weak_outliers(self):
+        outliers = list()
+        for look in self.looks.values():
+            if look.look_time() > self.std:
                 outliers.append((look.id, look.look_time()))
+        return outliers
+
+    @find_weak_outliers.variant("looks")
+    def find_weak_outliers(self):
+        outliers = list()
+        for look in self.looks.values():
+            if look.look_time() > self.std:
+                outliers.append(look)
         return outliers
 
 
@@ -215,12 +231,12 @@ class Glance:
         def wrapper(*args, **kwargs):
             if func.__name__ not in self.watches.keys():
                 self.watches[func.__name__] = Watch(target=func.__name__)
+                self.watches[func.__name__].expected_args = inspect.signature(func)
 
             look = self.watches[func.__name__].start_look()
-            watch = self.watches[func.__name__]
-            watch.expected_args = inspect.signature(func)
-            func_output = func(*args, **kwargs)
 
+            func_output = func(*args, **kwargs)
+            watch = self.watches[func.__name__]
             watch.stop_look(look)
             current_look = watch.looks[look]
             current_look.given_args = {
