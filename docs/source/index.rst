@@ -13,6 +13,3 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
-
-.. automodule:: glance.glance
-    :members:
