@@ -6,4 +6,6 @@ pytest
 # wheel
 wheel
 
+# PyPI and RTD
 twine
+sphinx
