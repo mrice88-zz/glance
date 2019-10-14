@@ -7,6 +7,8 @@ import statistics
 import inspect
 import dateutil.relativedelta
 from datetime import datetime
+import matplotlib.pyplot as plt
+import numpy as np
 from glance.errors import (
     GlanceLookOpenError,
     GlanceLookClosedError,
@@ -90,6 +92,7 @@ class Look:
                 ]
 
                 return readable_str
+
             return ", ".join(human_readable(time_delta))
         else:
             raise ValueError("Look has not been ended, no value for end_time")
@@ -99,6 +102,7 @@ class Look:
             raise GlanceLookClosedError(self)
         else:
             self.end_time = time.time()
+
 
 
 @attr.s
@@ -161,94 +165,58 @@ class Watch:
             raise GlanceWatchClosedError()
 
     @variants.primary
-    def longest_look(self):  # TODO refactor to use max()?
+    def longest_look(self):
         """
         Returns the longest look time in the given watch instance.
         :return:
         """
-        longest = None
-        for look in self.looks.values():
-            if longest:
-                if longest < look.look_time():
-                    longest = look.look_time()
-            else:
-                longest = look.look_time()
-        return longest
+        _, look = max(self.looks.items(), key=lambda x: x[1].look_time())
+        return look.look_time()
 
     @longest_look.variant("key")
-    def longest_look(self):  # TODO refactor to use max()?
+    def longest_look(self):
         """
         Returns the key of the longest look in the watch.
         :return: str Look.id
         """
-        longest = None
-        for key, look in self.looks.items():
-            if longest:
-                if longest[1] < look.look_time():
-                    longest = (key, look.look_time())
-            else:
-                longest = (key, look.look_time())
-        return longest[0]
+        key, _ = max(self.looks.items(), key=lambda x: x[1].look_time())
+        return key
 
     @longest_look.variant("tuple")
-    def longest_look(self):  # TODO refactor to use max()?
+    def longest_look(self):
         """
         Returns both the key, and the look_time of the longest look in the watch as a tuple.
         :return: (key, look_time)
         """
-        longest = None
-        for key, look in self.looks.items():
-            if longest:
-                if longest[1] < look.look_time():
-                    longest = (key, look.look_time())
-            else:
-                longest = (key, look.look_time())
-        return longest
+        key, look = max(self.looks.items(), key=lambda x: x[1].look_time())
+        return key, look.look_time()
 
     @variants.primary
-    def shortest_look(self):  # TODO refactor to use min()?
+    def shortest_look(self):
         """
         Returns shortest look time in the watch.
         :return:
         """
-        shortest = None
-        for look in self.looks.values():
-            if shortest:
-                if shortest > look.look_time():
-                    shortest = look.look_time()
-            else:
-                shortest = look.look_time()
-        return shortest
+        _, look = min(self.looks.items(), key=lambda x: x[1].look_time())
+        return look.look_time()
 
     @shortest_look.variant("key")
-    def shortest_look(self):  # TODO refactor to use min()?
+    def shortest_look(self):
         """
         Returns shortest look time's key in the watch.
         :return:
         """
-        shortest = None
-        for key, look in self.looks.items():
-            if shortest:
-                if shortest[1] > look.look_time():
-                    shortest = (key, look.look_time())
-            else:
-                shortest = (key, look.look_time())
-        return shortest[0]
+        key, _ = min(self.looks.items(), key=lambda x: x[1].look_time())
+        return key
 
     @shortest_look.variant("tuple")
-    def shortest_look(self):  # TODO refactor to use min()?
+    def shortest_look(self):
         """
         Returns both the key, and the look_time of the shortest look in the watch as a tuple.
         :return: (key, look_time)
         """
-        shortest = None
-        for key, look in self.looks.items():
-            if shortest:
-                if shortest[1] > look.look_time():
-                    shortest = (key, look.look_time())
-            else:
-                shortest = (key, look.look_time())
-        return shortest
+        key, look = min(self.looks.items(), key=lambda x: x[1].look_time())
+        return key, look.look_time()
 
     @property
     def mean(self):  # TODO might need to convert to method and handle open looks.
@@ -269,7 +237,7 @@ class Watch:
         return statistics.stdev(times)
 
     @variants.primary
-    def find_outliers(self):  # TODO might need to convert to method and handle open looks.
+    def find_outliers(self, n_std=2):  # TODO might need to convert to method and handle open looks.
         """
         Finds outliers in the given watch's Looks as a list of tuples [(id, time)]
         Outlier = 2 * standard deviation
@@ -277,12 +245,12 @@ class Watch:
         """
         outliers = list()
         for look in self.looks.values():
-            if look.look_time() > 2 * self.std:
+            if look.look_time() > n_std * self.std:
                 outliers.append((look.id, look.look_time()))
         return outliers
 
     @find_outliers.variant("looks")
-    def find_outliers(self):  # TODO might need to convert to method and handle open looks.
+    def find_outliers(self, n_std=2):  # TODO might need to convert to method and handle open looks.
         """
         Finds outliers in the given watch's Looks as a list of looks [Look]
         Outlier = 2 * standard deviation
@@ -290,7 +258,7 @@ class Watch:
         """
         outliers = list()
         for look in self.looks.values():
-            if look.look_time() > 2 * self.std:
+            if look.look_time() > n_std * self.std:
                 outliers.append(look)
         return outliers
 
@@ -320,6 +288,18 @@ class Watch:
                 outliers.append(look)
         return outliers
 
+    def plot(self, filename = None):
+        if not filename:
+            filename = f"{self.target}.png"
+        data = self.plot_data()
+        fig, ax = plt.subplots()
+        ax.hist(data)
+        plt.tight_layout()
+        plt.savefig(filename)
+
+    def plot_data(self):
+        data = np.array([look.look_time() for look in self.looks.values()])
+        return data
 
 @attr.s
 class Glance:
@@ -375,6 +355,7 @@ class Glance:
         :param func:
         :return:
         """
+
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             if func.__name__ not in self.watches.keys():
@@ -393,4 +374,17 @@ class Glance:
             }
 
             return func_output
+
         return wrapper
+
+    def plot(self, filename= None):
+        if not filename:
+            filename = f"glance-{round(time.time())}.png"
+        data = {}
+        for watch in self.watches.values():
+            data[watch.target] = watch.plot_data()
+        fig, ax = plt.subplots()
+        for key in data.keys():
+            ax.hist(data[key], label=key)
+        plt.tight_layout()
+        plt.savefig(filename)
