@@ -28,4 +28,3 @@ Simple Example
     def func_a():
         # some functionality.
 
-test push
