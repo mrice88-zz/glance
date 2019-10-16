@@ -1,8 +1,11 @@
 attrs
 variants
 python-dateutil
+matplotlib
+
 # for testing
 pytest
+
 # wheel
 wheel
 
