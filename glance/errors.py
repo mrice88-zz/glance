@@ -72,3 +72,7 @@ class GlanceWatchExistsError(GlanceBaseException):
     """
     def __init__(self, watch_target: str):
         self.message = f"Given watch with target: {watch_target} already exists."
+
+
+
+# git remote set-url origin git@github.com:polkapolka/glance.git
