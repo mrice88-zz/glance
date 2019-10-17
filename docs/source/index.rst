@@ -5,6 +5,9 @@ Welcome to glance's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+.. automodule:: glance
+    :members:
+
 
 Indices and tables
 ==================
