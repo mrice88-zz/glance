@@ -16,6 +16,7 @@ time_delta = dateutil.relativedelta.relativedelta(dt_end, dt_start)
 watch = Watch("test")
 watch.looks[look.id] = look
 
+
 def look_generator(start, end, n):
     for i in range(1, n+1):
         look = Look(f"test_{i}", None)
@@ -23,7 +24,6 @@ def look_generator(start, end, n):
         look.start_time = start.timestamp()
         look.end_time = end.timestamp()
         yield look
-
 
 
 def test_look_is_done():
@@ -109,6 +109,7 @@ def test_watch_stop():
 
     assert watch.end_time is not None
 
+
 def test_watch_outliers():
     one_sec_looks = list(look_generator(dt_start, dt_end, 5))
     two_sec_looks = list(look_generator(dt_start, dt_start + timedelta(seconds=2), 5))
@@ -120,6 +121,7 @@ def test_watch_outliers():
     result = test_watch.find_outliers()
     assert result == [(look.id, look.look_time()) for look in twenty_sec_looks]
     assert len(result) == 3
+
 
 def test_watch_weak_outliers():
     one_sec_looks = list(look_generator(dt_start, dt_end + timedelta(seconds=delta), 5))
@@ -145,7 +147,6 @@ def make_watch(n, delta = 0):
     for look in one_sec_looks +two_sec_looks + three_sec_looks + ten_sec_looks+twenty_sec_looks:
         test_watch.looks[look.id] = look
     return test_watch
-
 
 
 # def test_two_watches():

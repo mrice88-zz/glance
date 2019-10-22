@@ -104,7 +104,6 @@ class Look:
             self.end_time = time.time()
 
 
-
 @attr.s
 class Watch:
     """
@@ -288,18 +287,30 @@ class Watch:
                 outliers.append(look)
         return outliers
 
-    def plot(self, filename = None):
+    def _plot_data(self):
+        data = np.array([look.look_time() for look in self.looks.values()])
+        return data
+
+    def plot(self, filename: str = None, interactive: bool = False):
+        """
+        Plots a histogram of Look data for given Watch
+        :param filename:
+        :param interactive:
+        :return:
+        """
+        if not interactive:
+            plt.ioff()  # Turn off interactive mode
+
         if not filename:
             filename = f"{self.target}.png"
-        data = self.plot_data()
+
+        data = self._plot_data()
         fig, ax = plt.subplots()
+        fig.suptitle(f'{self.target} Look times', fontsize=20)
         ax.hist(data)
         plt.tight_layout()
         plt.savefig(filename)
 
-    def plot_data(self):
-        data = np.array([look.look_time() for look in self.looks.values()])
-        return data
 
 @attr.s
 class Glance:
@@ -377,13 +388,23 @@ class Glance:
 
         return wrapper
 
-    def plot(self, filename= None):
+    def plot(self, filename: str = None, interactive: bool = False):
+        """
+
+        :param filename:
+        :return:
+        """
         if not filename:
             filename = f"glance-{round(time.time())}.png"
+
+        if not interactive:
+            plt.ioff()
+
         data = {}
         for watch in self.watches.values():
-            data[watch.target] = watch.plot_data()
+            data[watch.target] = watch._plot_data()
         fig, ax = plt.subplots()
+        fig.suptitle(f'Glance Watches', fontsize=20)
         for key in data.keys():
             ax.hist(data[key], label=key)
         plt.tight_layout()
